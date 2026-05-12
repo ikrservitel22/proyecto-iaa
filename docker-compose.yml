@@ -1,0 +1,17 @@
+services:
+  proyecto-ia:
+    build: .
+    container_name: proyecto-ia
+    ports:
+      - "2222:22"
+      - "8001:8001"
+    volumes:
+      - ./workspace:/workspace
+      - .:/app
+    networks:
+      - red_ia
+
+networks:
+  red_ia:
+    external: true
+    name: red_ia

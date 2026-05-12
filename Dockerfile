@@ -1,42 +1,39 @@
 FROM ubuntu:22.04
 
-# Evitar prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Instalar Python + SSH + herramientas
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     openssh-server \
     sudo \
     git \
     curl \
-    && apt clean
+    zstd \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Crear usuario de trabajo
-RUN useradd -ms /bin/bash devuser && echo "devuser:devpass" | chpasswd
+RUN useradd -ms /bin/bash devuser && \
+    echo "devuser:1234" | chpasswd && \
+    usermod -aG sudo devuser && \
+    echo "devuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
-# Dar permisos sudo (opcional)
-RUN usermod -aG sudo devuser
+RUN pip3 install --no-cache-dir \
+    fastapi \
+    "uvicorn[standard]" \
+    requests \
+    numpy \
+    pandas \
+    scikit-learn \
+    python-multipart
 
-# Instalar dependencias Python
-RUN pip3 install requests
+RUN mkdir /var/run/sshd && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
-# Configurar SSH
-RUN mkdir /var/run/sshd
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
-# Permitir login por password (solo dev)
-RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+EXPOSE 22 8001
 
-# Exponer SSH
-EXPOSE 22
-
-# Iniciar SSH
-CMD ["/usr/sbin/sshd", "-D"]
-
-WORKDIR /app
-COPY main.py .
-COPY start.sh .
-RUN chmod +x start.sh
+CMD ["/start.sh"]

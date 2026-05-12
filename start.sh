@@ -1,20 +1,22 @@
 #!/bin/bash
+set -e
 
-# Arrancar el servidor Ollama en segundo plano
+# Arrancar SSH
+/usr/sbin/sshd
+
+# Arrancar Ollama en background
 ollama serve &
-OLLAMA_PID=$!
 
 # Esperar a que Ollama esté listo
-echo "Iniciando Ollama..."
+echo "Esperando Ollama..."
 until curl -s http://localhost:11434/api/tags > /dev/null 2>&1; do
     sleep 1
 done
+echo "Ollama listo"
 
-echo "Descargando modelo llama3.2:1b (primera vez ~1.3GB)..."
-ollama pull llama3.2:1b
+# Descargar modelo si no existe
+ollama pull qwen2.5:7b-instruct
 
-echo "Modelo listo. Iniciando chat..."
-python3 main.py
-
-# Al salir del chat, detener Ollama
-kill $OLLAMA_PID
+# Arrancar FastAPI desde donde está el código
+cd /app/ia
+exec uvicorn main:app --host 0.0.0.0 --port 8001
