@@ -6,7 +6,7 @@ import json
 app = FastAPI()
 
 CONFIG = {
-    "modelo": "qwen3.5:9b",
+    "modelo": "qwen2.5:3b-instruct",
     "ollama_url": "http://localhost:11434",
     "temperatura": 0.5,
     "max_tokens": 200,
@@ -38,7 +38,7 @@ def generar_respuesta(mensaje, historial):
     payload = {
         "model": CONFIG["modelo"],
         "prompt": prompt,
-        "stream": False,
+        "stream": True,
         "keep_alive": "30m",
         "options": {
             "temperature": CONFIG["temperatura"],
